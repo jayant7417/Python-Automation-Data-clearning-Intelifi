@@ -11,7 +11,6 @@ def process_lah(folder_path):
         if filename.endswith('.xlsx'):
             file_path = os.path.join(path, filename)
             df = pd.read_excel(file_path)
-            print("dv")
             df['Source_File'] = filename
             dfs_lah.append(df)
 
@@ -41,25 +40,38 @@ def process_lah(folder_path):
             df = pd.read_csv(file_path)
             df['Source_File'] = filename
             dfs_job.append(df)
-
+    
     if dfs_job:
         df_job = pd.concat(dfs_job, ignore_index=True)
         df_job['External Job Posting Id'] = df_job['External Job Posting Id'].fillna('')
-        df_job['External Job Posting Id'] = df_job['External Job Posting Id'].str.replace(
+        '''df_job['External Job Posting Id'] = df_job['External Job Posting Id'].str.replace(
             '(48 hours)|(48hours)|(48 hrs)|(48hrs)|(48 HOURS)|(48HOURS)|(48 HRS)|(48Hrs)|\'|(48 Hours)|(48Hours)|(48 Hrs)|(48Hrs)|\"|extension|Extension',
             '',
             regex=True
-        )
+        )'''
+        df_job['External Job Posting Id'] = df_job['External Job Posting Id'].str.replace(
+            r'(48 hours)|(48hours)|(48 hrs)|(48hrs)|(48 HOURS)|(48HOURS)|(48 HRS)|(48Hrs)|\'|(48 Hours)|(48Hours)|(48 Hrs)|(48Hrs)|\"|extension|Extension|\(|\)|\(\)',
+            '',
+        regex=True)
+
         df_job = df_job.dropna(subset=['Job Status'])
         df_job = df_job.drop_duplicates(subset=['External Job Posting Id'])
+        
+        '''output_file_path = folder_path.joinpath('result', 'temp.csv')
+        output_file_path.parent.mkdir(parents=True, exist_ok=True)
+        df_job.to_csv(output_file_path, index=False)
+        print(f"VMS processing done. Output saved to: {output_file_path}")'''
+        
         df_job['External Job Posting Id'] = df_job['External Job Posting Id'].astype(int) 
-
+        
         merged_df = pd.merge(df_lah, df_job, left_on='Requisition ID', right_on='External Job Posting Id', how='outer')
         merged_df = merged_df[['Requisition ID', 'Requisition Status', 'Job Status']]
 
         # Drop duplicates based on 'External Job Posting Id'
         merged_df = merged_df.dropna(subset=['Requisition ID'])
         merged_df['result'] = merged_df['Requisition Status'] == merged_df['Job Status']
+        
+        
         
         path3 = folder_path.joinpath('do not post', 'do_not_post_lah.csv') 
     

@@ -47,13 +47,18 @@ def process_dna(folder_path):
     if dfs_job:
         df_job = pd.concat(dfs_job, ignore_index=True)
         df_job['External Job Posting Id'] = df_job['External Job Posting Id'].fillna('')
-        df_job['External Job Posting Id'] = df_job['External Job Posting Id'].str.replace(
+        '''df_job['External Job Posting Id'] = df_job['External Job Posting Id'].str.replace(
             '(48 hours)|(48hours)|(48 hrs)|(48hrs)|(48 HOURS)|(48HOURS)|(48 HRS)|(48Hrs)|\'|(48 Hours)|(48Hours)|(48 Hrs)|(48Hrs)|\"|extension|Extension',
             '',
             regex=True
-        )
+        )'''
+        df_job['External Job Posting Id'] = df_job['External Job Posting Id'].str.replace(
+            r'(48 hours)|(48hours)|(48 hrs)|(48hrs)|(48 HOURS)|(48HOURS)|(48 HRS)|(48Hrs)|\'|(48 Hours)|(48Hours)|(48 Hrs)|(48Hrs)|\"|extension|Extension|\(|\)|\(\)',
+            '',
+        regex=True)
         df_job = df_job.dropna(subset=['Job Status'])
         df_job = df_job.drop_duplicates(subset=['External Job Posting Id'])
+        print("d1")
         df_job['External Job Posting Id'] = df_job['External Job Posting Id'].astype(int)
         
         merged_df = pd.merge(df_dna, df_job, left_on='Requisition ID', right_on='External Job Posting Id', how='outer')
